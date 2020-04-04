@@ -697,6 +697,7 @@ def sclspect (iflux, wv, wv1, wv2, ispect, iband, filterfwhm, wline, fline, fwhm
 # Args: 
 # farcs - spectrum (already scaled to total flux, in erg/s/cm**2/AA) 
 # dlambda - Bandwidth (AA)
+# lambdaeff -
 # eff - Total system efficiency
 # st - collecting area of telescope (cm**2)
 # omega - Projected source area (arcsec**2)

@@ -450,6 +450,9 @@ function selectInputflux() {
         $('label[for="id_rline_0"]').each(function() {
             this.style.color = "grey"
         });
+        $('label[for="id_rline_1"]').each(function() {
+            this.style.color = "grey"
+        });
 
         //document.getElementById("greylineflux").style.color = "grey";
         document.getElementById("id_lineflux").style.color = "grey";
@@ -487,6 +490,9 @@ function selectInputflux() {
         $('label[for="id_rline_0"]').each(function() {
             this.style.color = "black"
         });
+        $('label[for="id_rline_1"]').each(function() {
+            this.style.color = "black"
+        });
 
         document.getElementById("id_lineflux").style.color = "black";
         document.getElementById("id_linewave").style.color = "black";
@@ -497,10 +503,11 @@ function selectInputflux() {
         document.getElementById("id_rline_0").disabled = false;
         document.getElementById("id_rline_1").disabled = false;
 //        document.getElementById("id_rline_0").checked = true;
+        selectRline();
 
         document.getElementById("id_lineflux").disabled = false;
         document.getElementById("id_linewave").disabled = false;
-        document.getElementById("id_linefwhm").disabled = true;
+//        document.getElementById("id_linefwhm").disabled = true;
         document.getElementById("id_lineap").disabled = false;
         document.getElementById("id_contap").disabled = false;
 

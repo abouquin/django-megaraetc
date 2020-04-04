@@ -21,12 +21,14 @@ def bokehplot1(sourcet,
 
     # x[0::10]    # too much datapoints, extract every 10
     # y[0::10]    # do the same here
-    inpsource = ColumnDataSource(data=dict(t=x, c=y))
-    skysource = ColumnDataSource(data=dict(t=x, c=ysky))
+    # inpsource = ColumnDataSource(data=dict(t=x, c=y))
+    # skysource = ColumnDataSource(data=dict(t=x, c=ysky))
 
     p1 = figure(plot_height=400, active_scroll="wheel_zoom", toolbar_location="above", webgl=True)
-    skyspec = p1.line(x, ysky, color='cyan', source=skysource)
-    inputsource = p1.line(x, y, color='blue', source=inpsource)
+    print 'x=',x
+    print 'ysky=',ysky
+    skyspec = p1.line(x, ysky, color='cyan')#, source=skysource)
+    inputsource = p1.line(x, y, color='blue')#, source=inpsource)
     vlineg = Span(location=float(x3), dimension='height', line_color='green', line_width=1, line_dash='dashed')
     vlinemin = Span(location=float(vph_minval), dimension='height', line_color='red', line_width=1, line_dash='dashed')
     vlinemax = Span(location=float(vph_maxval), dimension='height', line_color='red', line_width=1, line_dash='dashed')
@@ -46,6 +48,7 @@ def bokehplot1(sourcet,
         p1.y_range = Range1d(0, 2*max(y))
     else:
         p1.y_range = Range1d(0, 1.5*max(y))
+
     if fluxt == 'L':
         legend1 = Legend(items=[
         ("VPH min max", [p1.line(0, 0, line_dash='dashed', line_width=1, color='red')]),

@@ -45,25 +45,28 @@
             <h3>Welcome to<BR />
             MEGARA Online
             <hr id="index_hr_special" />
-            Exposure Time Calculator version 1.0.1</h3>
+            Exposure Time Calculator version 1.0.2</h3>
         </div>
         <div id="index_bottomdiv">
             <a href="https://www.djangoproject.com/" target="_blank">
                 <img title="Powered by Django"
                      src="{% static 'etc/images/django.jpg' %}"
-                     id="img_django"/>
+                     id="img_django" />
             </a>
-            <!--<a href="http://www.mathjax.org" target="_blank">-->
-                <!--<img title="Powered by MathJax"-->
-                <!--src="http://cdn.mathjax.org/mathjax/badge/badge.gif"-->
-                <!--border="0" alt="Powered by MathJax" />-->
-            <!--</a>-->
-            <a href="http://bokeh.pydata.org/en/latest/" target="_blank">
+            <a href="http://bokeh.pydata.org/" target="_blank">
                 <img title="Powered by Bokeh"
-                     src="http://bokeh.pydata.org/en/latest/_static/images/logo.png"
+                     src="{% static 'etc/images/bokeh-logo-300.png' %}"
                      border="0"
                      alt="Powered by Bokeh"
                      id="img_bokeh"
+                />
+            </a>
+            <a href="https://cdnjs.com/libraries/mathjax" target="_blank">
+                <img title="Powered by MathJax"
+                     src="{% static 'etc/images/1200px-MathJax.svg.png' %}"
+                     border="0"
+                     alt="Powered by MathJax"
+                     id="img_mathjax"
                 />
             </a>
         </div>
@@ -73,7 +76,7 @@
         <div id="recommendation">Browser recommendation: Chrome or Firefox.</div>
         <hr id="index_footerline">
         <div id="index_footer">
-            <font id="copyright">&copy;2016-2017 MEGARA</font>
+            <font id="copyright">&copy;2016 MEGARA</font>
         </div>
     </div>
 </div><!--close wrapper-->

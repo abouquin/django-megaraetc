@@ -119,6 +119,11 @@ div.maintitletd {
     width: 37px;
 }
 
+#img_mathjax {
+    text-align: right;
+    width: 37px;
+}
+
 #copyright {
     font-size: 10pt;
 }

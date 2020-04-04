@@ -1,7 +1,8 @@
 ### MEGARA ONLINE ETC HISTORY ###
 
-2017/06/21 v1.0.1 GTC reflectivity updated. Normalization of input spectrum now uses FWHM range of filter. Added line-toggling checkboxes to plot.
-2017/06/02 v1.0.0 Updated bokeh v.0.12.5, Manual, and Quick Guide.
+2020/04/04 v1.0.2 This new version of the MEGARA Exposure Time Calculator corrects an error in the way the sky background was computed when the input spectrum included a specific emission line. Bokeh webgl deprecated and updated. Feedback e-mail address updated. MathJax updated to cloudflare CDNJS. Fixed javascript bugs.
+2017/06/21 v1.0.1 First version made available at the GTC site for semester 2018B. GTC reflectivity updated. Normalization of input spectrum now uses FWHM range of filter. Added line-toggling checkboxes to plot.
+2017/06/02 v1.0.0 Updated Bokeh v.0.12.5, Manual, and Quick Guide.
 2017/03/30 v0.9.5 Added new calculation mode and batch process capability.
 2017/03/01 v0.8.1 Added confirmation message when resetting the form.
 2017/01/15 v0.8.0 Updated output format for both MOS and LCB. Updated calculations and creation of new tables. Bug fixes: line SNR now appear. New icons.
@@ -23,5 +24,5 @@
 2016/04/01 v0.4.2 Updated forms. Latest version with d3.js
 2016/02/06 v0.4.2 Manual download buttons updates
 2016/02/05 v0.4.2 Bug fix: contfluxval fixed
-2016/01/31 v0.4.2 MEGARA Online ETC first release
+2016/01/31 v0.4.2 MEGARA Online ETC first (internal) release
 

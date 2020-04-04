@@ -1183,7 +1183,7 @@ def calc(sourcet_val, inputcontt_val, mag_val, fc_val, \
         textcalc+= "Reading filter transmission file %s because bandsky= %s <br />" % (filtercvphdat, bandsky)
 
         # Sky spectrum scaled to totalflux in input filter
-        norms, fs = sclspect(fsky, lamb, ls1, ls2, skyspectrum, tfiltercvph, filterfwhm, wline_val, fline_val, fwhmline_val)
+        norms, fs = sclspect(fsky, lamb, ls1, ls2, skyspectrum, tfiltercvph, filterfwhm, wline_val, 0, fwhmline_val)
         textcalc += "Normalization factor for sky spectrum norms = %s <br />" % norms
 
 
@@ -1235,37 +1235,6 @@ def calc(sourcet_val, inputcontt_val, mag_val, fc_val, \
         textcalc += "Number of sky fibers $N_{fiber,sky} = %s $<br />" % nfibresky
         textcalc += "Area in which sky has been measured $\Omega_{sky} = N_{fiber,sky} \\times A_{fiber} = %s \\times %s = %s \\textrm{arcsec}^{2}$ <br />" % (nfibresky, areafibre, omegasky)
 
-        ###
-        # batchname, batchband, batchmag, batch_c, batch_cr1, batch_cr1r2 = ([] for i in range(6))
-        # if sourcet_val=='P' and batchyesno_val=='batchyes':
-        #     # print batchdata
-        #     batchdata = batchdata.encode('utf-8')   # remove 'u'
-        #     # print batchdata
-        #     filelength = len(batchdata.split("\n")) # lines are split by \r
-        #     print filelength
-        #     if filelength > 92:
-        #         print "INPUT DATA CONTAINS MORE THAN 92 LINES: NOT COMPUTING"
-        #     else:
-        #         thedata = batchdata.split("\n")
-        #         print thedata
-        #         numrow = len(thedata)
-        #         print 'numrow=',numrow
-        #         # if numrow < 3 or numrow > 3:
-        #         #     print "SOMETHING WRONG WITH THE INPUT"
-        #         # else:
-        #         for i in range(numrow):
-        #             line=thedata[i]
-        #             print line
-        #             if "#" not in line:
-        #                 data = line.split(',')
-        #                 batchname.append(data[0])
-        #                 batchband.append(data[1])
-        #                 batchmag.append(data[2].strip('\r'))
-        #                 batch_c.append('0')
-        #                 batch_cr1.append('0')
-        #                 batch_cr1r2.append('0')
-        #         print batchmag
-        # ###
 
         # Different spatial and resolution elements to consider, depending on whether the source is punctual or extended.
         # Starting FOR loop for computations of SNR per frame
@@ -1921,27 +1890,351 @@ def calc(sourcet_val, inputcontt_val, mag_val, fc_val, \
             #
 
             etpframe_c_voxel_val = bisec(0,12)
-            etallframe_c_voxel_val = bisec(0,12) * numframe_val
+            etallframe_c_voxel_val = etpframe_c_voxel_val * numframe_val
             etpframe_cr1_voxel_val = bisec(1,12)
-            etallframe_cr1_voxel_val = bisec(1,12) * numframe_val
+            etallframe_cr1_voxel_val = etpframe_cr1_voxel_val * numframe_val
             etpframe_cr1r2_voxel_val = bisec(2,12)
-            etallframe_cr1r2_voxel_val = bisec(2,12) * numframe_val
+            etallframe_cr1r2_voxel_val = etpframe_cr1r2_voxel_val * numframe_val
     
             etpframe_c_aa_val = bisec(0,13)
-            etallframe_c_aa_val = bisec(0,13) * numframe_val
+            etallframe_c_aa_val = etpframe_c_aa_val * numframe_val
             etpframe_cr1_aa_val = bisec(1,13)
-            etallframe_cr1_aa_val = bisec(1,13) * numframe_val
+            etallframe_cr1_aa_val = etpframe_cr1_aa_val * numframe_val
             etpframe_cr1r2_aa_val = bisec(2,13)
-            etallframe_cr1r2_aa_val = bisec(2,13) * numframe_val
+            etallframe_cr1r2_aa_val = etpframe_cr1r2_aa_val * numframe_val
 
             etpframe_c_all_val = bisec(0,14)
-            etallframe_c_all_val = bisec(0,14) * numframe_val
+            etallframe_c_all_val = etpframe_c_all_val * numframe_val
             etpframe_cr1_all_val = bisec(1,14)
-            etallframe_cr1_all_val = bisec(1,14) * numframe_val
+            etallframe_cr1_all_val = etpframe_cr1_all_val * numframe_val
             etpframe_cr1r2_all_val = bisec(2,14)
-            etallframe_cr1r2_all_val = bisec(2,14) * numframe_val
+            etallframe_cr1r2_all_val = etpframe_cr1r2_all_val * numframe_val
+
+            if fluxt_val == 'L': # in case of line
+                def SNRfuncline(et, xxit):
+                    # Deriving spectroscopic parameters for each case:
+                    xit = xxit # different from the continuum ones (using specparline instead of specpar)
+
+                    deltalambda = fwhmline_val * nfwhmline_val
+                    npixx = deltalambda / disp
+                    deltalambdacont = fwhmline_val * cnfwhmline_val
+                    npixxcont = deltalambdacont / disp
+
+                    # Different spatial elements to consider, depending on whether the source is punctual or extended.
+                    # Starting FOR loop for computations
+                    items = range(4)
+                    for xit in items:
+                        # Deriving spectroscopic parameters for each case:
+                        omegasource, npixy, omegaskysource, nfiby, npixx = \
+                            specparline(om_val, xit, areasource, diamsource, ps, disp,
+                                        nfibres, areafibre, rfibre, nfibresy,
+                                        areaseeing, seeingx, npixx)
+
+                        # Line signal in defined spatial resolution element: only in the line
+                        # Line flux is given already integrated (not per AA)--> bandwidth deltalambda = 1 AA
+                        signalline = linesignal(flineparc, 1.0, effsys, stel, omegasource, exptimepframe_val, wline_val, lamb)
+
+                        # Continuum signal in defined spatial resolution element, in deltalambda.
+                        # (If no. of line FWHMs selected is deltalambda to derive the line signal).
+                        # Extract continuum at the wavelength.
+                        ind = numpy.where(lamb == wline_val)
+                        contatline = fc[ind]
+
+                        signalcont_line = linesignal(contatline, deltalambda, effsys, stel, omegasource, exptimepframe_val, wline_val, lamb)
+
+                        # Number of pixels in detector under consideration: just counting the factor in area
+                        # when we consider the used sky minibundles
+                        npix = npixx * npixy
+                        npixcont = (cnfwhmline_val / nfwhmline_val) * npix
+
+                        # Signal of dark current
+                        signaldark_line, signaldark_lineverb = dark(exptimepframe_val, dc, npix)
+                        # Noise due to dark measurement to the square
+                        noisedarksq_line, noisedarksq_lineverb = darknoisesq(npix, npdark_val, exptimepframe_val, dc, ron)
+                        # RON
+                        ronoiseline, ronoiselineverb = readoutnoise(npix, ron)
+
+                        # Noise due to continuum substraction
+                        # Continuum signal *MEASURED* in spatial resolution element, in cnfwhmline_val
+                        signalcontmeasured = linesignal(contatline, deltalambdacont, effsys, stel, omegasource,
+                                                        exptimepframe_val, wline_val, lamb)
+                        ronoisecontmeasured, ronoisecontmeasuredverb = readoutnoise(npixcont, ron)
+                        signaldarkcontmeasured, sdcmverb = dark(exptimepframe_val, dc, npixcont)
+                        noisedarksqcontmeasured, noisedarksqcontmeasuredverb = darknoisesq(npixcont, npdark_val,
+                                                                                           exptimepframe_val, dc, ron)
+                        noisecontsq = (nfwhmline_val / cnfwhmline_val) ** 2 * (
+                        signalcontmeasured + ronoisecontmeasured + signaldarkcontmeasured + noisedarksqcontmeasured)
+
+                        # Line noise in defined spectral and spatial resolution element
+                        noiseline = math.sqrt(
+                            signalline + signalcont_line + signaldark_line + ronoiseline + noisedarksq_line + noisecontsq)
+
+                        # Signal-to-noise of line
+                        snline = signalline / noiseline
+
+                        # Cases per arcsec2 and per AA and per fibre per AA
+                        if xit == 2 or xit == 3:
+                            npixxinAA = 1.0 / disp
+                            npixinAA = npixxinAA * npixy
+
+                            # If line FWHM is > 1 A, line and continuum fluxes contributing to measurement
+                            if fwhmline_val > 1.0:
+                                signallineperAA = signalline / fwhmline_val
+                                signalcont_lineperAA = signalcont_line / deltalambda
+                            # If line FWHM is < 1 A, line and continuum fluxes contributing to measurement
+                            else:
+                                signallineperAA = signalline
+                                signalcont_lineperAA = linesignal(contatline, 1.0, effsys, stel, omegasource,
+                                                                  exptimepframe_val, wline_val, lamb)
+
+                            # Common computations, independent on if FWHM > 1AA or not.
+                            signaldark_lineperAA, signaldark_lineperAAverb = dark(exptimepframe_val, dc, npixinAA)
+                            noisedarksq_lineperAA, noisedarksq_lineperAAverb = darknoisesq(npixinAA, npdark_val,
+                                                                                           exptimepframe_val, dc, ron)
+                            ronoiselineperAA, ronoiselineperAAverb = readoutnoise(npixinAA, ron)
+
+                            # Noise in continuum measurement is the same as before, but the scaling is
+                            # different according to the different number of pixels in 1 AA.
+                            noisecontmeasuredperAA = (((1. / fwhmline_val) / nfwhmline_val) ** 2) * noisecontsq
+
+                            # Total noise in line
+                            noiselineperAA = math.sqrt(
+                                signallineperAA + signalcont_lineperAA + signaldark_lineperAA + ronoiselineperAA + noisedarksq_lineperAA + noisecontmeasuredperAA)
+
+                            if xit == 2:
+                                snlineperAA = signallineperAA / noiselineperAA
+                            if xit == 3:
+                                snlinefibreperAA = signallineperAA / noiselineperAA  ### SAME AS snlineperAA ???
+
+                        # 1 voxel, (1 fibre diameter * 4 pix in spectral direction)
+                        if xit == 3:
+                            # VPH FWHM is always <= line FWHM (it is imposed)
+                            npixfibre = (fwhmline_val / disp) * (2. * rfibre / ps)
+                            npixxvoxel = 4.0  # Nyquist-Shannon sampling theorem
+                            npixyvoxel = 4.0
+                            npixvoxel = npixxvoxel * npixyvoxel
+                            ratio = npixfibre / (npixvoxel)
+                            signallinevoxel = signalline / ratio
+                            print 'npixfibre = ', npixfibre
+                            print 'npixvoxel = ', npixvoxel
+                            signalcont_linevoxel = signalcont_line / ratio
+
+                            signaldark_linevoxel, signaldark_linevoxelverb = dark(exptimepframe_val, dc, npixvoxel)
+                            noisedarksq_linevoxel, noisedarksq_linevoxelverb = darknoisesq(npixvoxel, npdark_val,
+                                                                                           exptimepframe_val, dc, ron)
+                            ronoiselinevoxel, ronoiselinevoxelverb = readoutnoise(npixvoxel, ron)
+
+                            # Noise in continuum measurement is the same as before, but the scaling is
+                            # different according to the different number of pixels in 4 pixels.
+                            # noisecontmeasuredpervoxel = (((fwhmvph / fwhmline_val) / nfwhmline_val) ** 2) * noisecontsq
+                            noisecontmeasuredpervoxel = (((fwhmvph / fwhmline_val) / nfwhmline_val) ** 2) * noisecontsq
+                            noiselinevoxel = math.sqrt(
+                                signallinevoxel + signalcont_linevoxel + signaldark_linevoxel + ronoiselinevoxel + noisedarksq_linevoxel + noisecontmeasuredpervoxel)
+
+                            snlinevoxel = signallinevoxel / noiselinevoxel
+
+                        # 1 spectral and spatial pixel (i.e. 1 detector pixel)
+                        if xit == 3:
+                            npixfibre = (fwhmline_val / disp) * (2. * rfibre / ps)
+                            npixx1pix = 1.0
+                            npixy1pix = 1.0
+                            npix1pix = npixx1pix * npixy1pix
+                            ratio = npixfibre / (npix1pix)
+                            signalline1pix = signalline / ratio
+                            print 'npixfibre = ', npixfibre
+                            print 'npixvoxel = ', npix1pix
+                            signalcont_line1pix = signalcont_line / ratio
+
+                            signaldark_line1pix, signaldark_line1pixverb = dark(exptimepframe_val, dc, npix1pix)
+                            noisedarksq_line1pix, noisedarksq_line1pixverb = darknoisesq(npix1pix, npdark_val,
+                                                                                         exptimepframe_val, dc, ron)
+                            ronoiseline1pix, ronoiseline1pixverb = readoutnoise(npix1pix, ron)
+
+                            # Noise in continuum measurement is the same as before, but the scaling is
+                            # different according to the different number of pixels 1 pix.
+                            noisecontmeasuredperspaxel = ((((
+                                                            fwhmvph / fwhmline_val) / 4.0) / nfwhmline_val) ** 2) * noisecontsq
+                            noiseline1pix = math.sqrt(
+                                signalline1pix + signalcont_line1pix + signaldark_line1pix + ronoiseline1pix + noisedarksq_line1pix + noisecontmeasuredperspaxel)
+
+                            snline1pix = signalline1pix / noiseline1pix
+                            # snline1pix = snlinevoxel / math.sqrt(16)
+
+                        # Output values:
+
+                        if xit == 0:  # All area
+                            snline_all = snline
+                            tsnline_all = snline_all * numpy.sqrt(numframe_val)
+
+                        elif xit == 1:  # Seeing
+                            snline_seeing = snline
+                            tsnline_seeing = snline_seeing * numpy.sqrt(numframe_val)
+
+                        elif xit == 2:  # 1 arcsec**2
+                            snline_1 = snline
+                            tsnline_1 = snline_1 * numpy.sqrt(numframe_val)
+                            snline_1_aa = snlineperAA
+                            tsnline_1_aa = snline_1_aa * numpy.sqrt(numframe_val)
+
+                        elif xit == 3:  # 1 fibre
+                            snline_fibre = snline
+                            tsnline_fibre = snline_fibre * numpy.sqrt(numframe_val)  # all frames
+                            snline_fibre1aa = snlinefibreperAA
+                            tsnline_fibre1aa = snline_fibre1aa * numpy.sqrt(numframe_val)  # all frames
+                            snline_voxel = snlinevoxel
+                            tsnline_voxel = snline_voxel * numpy.sqrt(numframe_val)  # all frames
+                            snline_pspp = snline1pix
+                            tsnline_pspp = snline_pspp * numpy.sqrt(numframe_val)  # total SNR per detector pixel
+
+                    return [snline, snline_seeing, snline_1, snline_1_aa, snline_fibre, snline_fibre1aa, snline_voxel, snline_pspp]
+
+                def bisecline(i, xxit):
+                    print ""
+                    print "ENTERING BISECTION METHOD"
+                    counter = 0  # reset counter
+                    limit = 20  # set limit
+                    dec = 2  # change rounding precision here
+                    SNR = numpy.round(snrpframe_val, 1)
+
+                    print 'SNR = ', SNR
+
+                    ### Cope for bright objects
+                    if mag_val < 15:
+                        xa = 120  # initial value
+                        dec = 1  # rounding precision
+                    else:
+                        xa = 1200  # initial value
+                        dec = 1  # rounding precision
+                    ya = SNRfuncline(xa, xxit)[i]
+
+                    xb = xa * 2
+                    yb = SNRfuncline(xb, xxit)[i]
+
+                    print 'f(xa)= f(', xa, ')=', ya
+                    print 'f(xb)= f(', xb, ')=', yb
+
+                    # cope for signs
+                    if yb < ya:
+                        print "ya is bigger than yb"
+                        # find the right range from the single value xa
+                        if ya < SNR:
+                            while ya < SNR and counter <= limit:
+                                counter += 1
+                                print 'ya < SNR', xa, ya
+                                xa = xa * 2
+                                ya = numpy.round(SNRfuncline(xa, xxit)[i], dec)
+                                print xa, ya
+                            else:
+                                if counter == limit + 1:
+                                    print "FAILED TO FIND A GOOD RANGE! ya < SNR"
+                                else:
+                                    counter += 1
+                                    print counter, xa, ya
+                                    print 'FOUND a RANGE! \n A good value for xa is =', xa, 'which gives', ya, 'at step', counter
+
+                        elif yb > SNR:
+                            while yb > SNR and counter <= limit:
+                                counter += 1
+                                print 'yb > SNR', xb, yb
+                                xb = xb * 0.5
+                                yb = numpy.round(SNRfuncline(xb, xxit)[i], dec)
+                            else:
+                                if counter == limit + 1:
+                                    print "FAILED TO FIND A GOOD RANGE! yb > SNR"
+                                else:
+                                    counter += 1
+                                    print counter, xb, yb
+                                    print 'FOUND a RANGE! \n A good value for xa is =', xb, 'which gives', yb, 'at step', counter
+
+                    elif yb > ya:
+                        print "yb is bigger than ya"
+                        # find the right range from the single value xa
+                        if yb < SNR:
+                            while yb < SNR and counter <= limit:
+                                counter += 1
+                                print 'yb < SNR', xb, yb
+                                xb = xb * 2
+                                yb = numpy.round(SNRfuncline(xb, xxit)[i], dec)
+                            else:
+                                if counter == limit + 1:
+                                    print "FAILED TO FIND A GOOD RANGE! yb < SNR"
+                                else:
+                                    counter += 1
+                                    print counter, xa, ya
+                                    print 'SUCCESS! \n The best value for xb is =', xb, 'which gives', yb, 'at step', counter
+                        elif ya > SNR:
+                            while ya > SNR and counter <= limit:
+                                counter += 1
+                                print 'ya > SNR', xa, ya
+                                xa = xa * 0.5
+                                ya = numpy.round(SNRfuncline(xa, xxit)[i], dec)
+                            else:
+                                if counter == limit + 1:
+                                    print "FAILED TO FIND GOOD RANGE! ya > SNR"
+                                else:
+                                    counter += 1
+                                    print counter, xa, ya
+                                    print 'SUCCESS! \n The best value for xa is =', xa, 'which gives', ya, 'at step', counter
+
+                    elif yb == ya:
+                        print "ya == yb"
+
+                    print 'exptime is between', xa, 'and', xb
+                    xc = numpy.abs(xa - xb) / 2
+                    yc = numpy.round(SNRfuncline(xc, xxit)[i], dec)
+                    print 'f(xc)= f(', xc, ')=', yc
+                    print 'SNR to reach is', SNR
+
+                    listofxc = [xc]
+                    listofyc = [yc]
+
+                    counter = 0  # reset counter
+                    limit = 20  # set limit
+                    while yc != SNR and counter <= limit:
+                        counter += 1
+                        print counter, xc, yc
+                        if yc < SNR < yb:
+                            xa = xc
+                            ya = yc
+                            xc = xa + numpy.abs(xa - xb) / 2
+                            yc = numpy.round(SNRfuncline(xc, xxit)[i], dec)
+                            listofxc.append(xc)
+                            listofyc.append(yc)
+
+                        elif ya < SNR < yc:
+                            xb = xc
+                            yb = yc
+                            xc = xb - numpy.abs(xa - xb) / 2
+                            yc = numpy.round(SNRfuncline(xc, xxit)[i], dec)
+                            listofxc.append(xc)
+                            listofyc.append(yc)
+
+                    else:
+                        if counter == limit + 1:
+                            print "FAILED TO CONVERGE!"
+                            xc = -999
+
+                        else:
+                            counter += 1
+                            print counter, xc, yc
+                            print 'SUCCESS! \n The best exptime is =', xc, 'which gives', yc, 'at step', counter
+                    return xc
+
+                etpframeline_c_voxel_val = bisecline(6,3)
+                etallframeline_c_voxel_val  = etpframeline_c_voxel_val * numframe_val
+
+                etpframeline_c_aa_val = bisecline(6,2)
+                etallframeline_c_aa_val = etpframeline_c_aa_val * numframe_val
+
+                etpframeline_c_linap1fib_val = bisecline(2,3)
+                etallframeline_c_linap1fib_val = etpframeline_c_linap1fib_val * numframe_val
+
+                etpframeline_c_linapallfib_val = bisecline(0,3)
+                etallframeline_c_linapallfib_val = etpframeline_c_linapallfib_val * numframe_val
             
         else:
+            print ''
+            print "WENT HERE"
             etpframe_c_voxel_val = 0
             etallframe_c_voxel_val = 0
             etpframe_cr1_voxel_val = 0
@@ -1960,6 +2253,16 @@ def calc(sourcet_val, inputcontt_val, mag_val, fc_val, \
             etallframe_cr1_all_val = 0
             etpframe_cr1r2_all_val = 0
             etallframe_cr1r2_all_val = 0
+
+            etpframeline_c_voxel_val = 999
+            etallframeline_c_voxel_val = 999
+            etpframeline_c_aa_val = 999
+            etallframeline_c_aa_val = 999
+            etpframeline_c_linap1fib_val = 999
+            etallframeline_c_linap1fib_val = 999
+            etpframeline_c_linapallfib_val = 999
+            etallframeline_c_linapallfib_val = 999
+
 
 
         #############################################
@@ -1999,7 +2302,7 @@ def calc(sourcet_val, inputcontt_val, mag_val, fc_val, \
                 fskyvega = mag2flux(magvegas, fvegas, skymag)
                 fsky = fskyvega * skybf
 
-                norms, fs = sclspect(fsky, lamb, ls1, ls2, skyspectrum, tfiltercvph, filterfwhm, wline_val, fline_val, fwhmline_val)
+                norms, fs = sclspect(fsky, lamb, ls1, ls2, skyspectrum, tfiltercvph, filterfwhm, wline_val, 0, fwhmline_val)
 
                 # Deriving spectroscopic parameters for each case:
                 xit=xxit
@@ -2269,8 +2572,7 @@ def calc(sourcet_val, inputcontt_val, mag_val, fc_val, \
         ###################
         # In case of line #
         ###################
-        if fluxt_val == 'L':
-
+        if fluxt_val == 'L' and cmode_val == 'T':
             deltalambda = fwhmline_val * nfwhmline_val
             npixx = deltalambda / disp
             deltalambdacont = fwhmline_val * cnfwhmline_val
@@ -2296,7 +2598,7 @@ def calc(sourcet_val, inputcontt_val, mag_val, fc_val, \
                 # Extract continuum at the wavelength.
                 ind = numpy.where(lamb == wline_val)
                 contatline = fc[ind]
-
+                print 'contatline = ', contatline
                 signalcont_line = linesignal(contatline, deltalambda, effsys, stel, omegasource, exptimepframe_val, wline_val, lamb)
 
                 # Number of pixels in detector under consideration: just counting the factor in area
@@ -2433,6 +2735,24 @@ def calc(sourcet_val, inputcontt_val, mag_val, fc_val, \
 
             # End of FOR loop for computations
             pass
+
+        # elif fluxt_val == 'L' and cmode_val == 'S':
+        #     snline_all = 1.
+        #     tsnline_all = 1.
+        #     snline_seeing = 1.
+        #     tsnline_seeing = 1.
+        #     snline_1 = 1.
+        #     tsnline_1 = 1.
+        #     snline_1_aa = 1.
+        #     tsnline_1_aa = 1.
+        #     snline_fibre = 1.
+        #     tsnline_fibre = 1.
+        #     snline_pspp = 1.
+        #     tsnline_pspp = 1.
+        #     snline_voxel = 1.
+        #     tsnline_voxel = 1.
+        #     snline_fibre1aa = 1.
+        #     tsnline_fibre1aa = 1.
 
         # Ending if line
         else:
@@ -2576,6 +2896,14 @@ def calc(sourcet_val, inputcontt_val, mag_val, fc_val, \
                 'etallframe_cr1_all_val' : etallframe_cr1_all_val, \
                 'etpframe_cr1r2_all_val' : etpframe_cr1r2_all_val, \
                 'etallframe_cr1r2_all_val' : etallframe_cr1r2_all_val, \
+                'etpframeline_c_voxel_val' : etpframeline_c_voxel_val, \
+                'etallframeline_c_voxel_val' : etallframeline_c_voxel_val, \
+                'etpframeline_c_aa_val' : etpframeline_c_aa_val, \
+                'etallframeline_c_aa_val' : etallframeline_c_aa_val, \
+                'etpframeline_c_linap1fib_val' : etpframeline_c_linap1fib_val, \
+                'etallframeline_c_linap1fib_val' : etallframeline_c_linap1fib_val, \
+                'etpframeline_c_linapallfib_val' : etpframeline_c_linapallfib_val, \
+                'etallframeline_c_linapallfib_val' : etallframeline_c_linapallfib_val, \
 \
                 'npdark_val': npdark_val, \
                 'nsbundles_val': nsbundles_val, 'nsfib_val': nsfib_val, \
